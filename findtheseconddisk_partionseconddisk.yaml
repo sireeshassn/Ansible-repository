@@ -1,0 +1,116 @@
+---
+- name: Find second disk on the server
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Gather disk details on servers
+      ansible.builtin.setup:
+        gather_subset: hardware
+
+    - name: Finding the second disk on servers 
+      set_fact:
+        second_disk: "{{ ansible_devices.keys() | select('match', '^xvd[b-z]$') | list | first }}"
+
+    - name: Check if second disk found 
+      debug:
+        msg: "Second disk found: /dev/{{ second_disk }}"
+      when: second_disk is defined
+
+- name: LVM partions on ubuntu server
+  hosts: all
+  become: true
+  gather_facts: true
+
+  tasks:
+    - name: Create Physical Volume on {{ second_disk }}
+      community.general.lvg:
+        vg: vg01
+        pvs: "/dev/{{ second_disk }}1"
+      when: second_disk is defined
+
+    - name: Create Logical Volume lv01
+      community.general.lvol:
+        vg: vg01
+        lv: lv01
+        size: 75G
+      when: second_disk is defined
+
+    - name: Format the volume with ext4 fs
+      community.general.filesystem:
+        fstype: ext4
+        dev: /dev/vg01/lv01
+      when: second_disk is defined
+
+    - name: Mount lv01 on /data
+      ansible.posix.mount:
+        path: /data
+        src: /dev/vg01/lv01
+        fstype: ext4
+        state: mounted
+      when: second_disk is defined
+
+    - name: Create Logical Volume lv02
+      community.general.lvol:
+        vg: vg01
+        lv: lv02
+        size: 10G
+      when: second_disk is defined
+
+    - name: Format the volume with ext4 fs
+      community.general.filesystem:
+        fstype: ext4
+        dev: /dev/vg01/lv02
+      when: second_disk is defined
+
+    - name: Mount lv02 on /var
+      ansible.posix.mount:
+        path: /var
+        src: /dev/vg01/lv02
+        fstype: ext4
+        state: mounted
+      when: second_disk is defined
+
+    - name: Create Logical Volume lv03
+      community.general.lvol:
+        vg: vg01
+        lv: lv03
+        size: 5G
+      when: second_disk is defined
+
+    - name: Format the volume with ext4 fs
+      community.general.filesystem:
+        fstype: ext4
+        dev: /dev/vg01/lv03
+      when: second_disk is defined
+
+    - name: Mount lv03 on /tmp
+      ansible.posix.mount:
+        path: /tmp
+        src: /dev/vg01/lv03
+        fstype: ext4
+        state: mounted
+      when: second_disk is defined
+
+    - name: Create Logical Volume lv04
+      community.general.lvol:
+        vg: vg01
+        lv: lv04
+        size: "100%FREE"
+      when: second_disk is defined
+
+    - name: Format the volume with ext4 fs
+      community.general.filesystem:
+        fstype: ext4
+        dev: /dev/vg01/lv04
+      when: second_disk is defined
+
+    - name: Mount lv04 on /snapdata
+      ansible.posix.mount:
+        path: /snapdata
+        src: /dev/vg01/lv04
+        fstype: ext4
+        state: mounted
+      when: second_disk is defined
+
