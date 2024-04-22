@@ -1,0 +1,38 @@
+---
+- name: Update environment configuration files
+  hosts: all
+  become: yes
+  tasks:
+    - name: Create /etc/apt/apt.conf file if not exists
+      file:
+        path: /etc/apt/apt.conf
+        state: touch
+      ignore_errors: yes
+
+    - name: Update /etc/environment file
+      lineinfile:
+        path: /etc/environment
+        line: "{{ item }}"
+        insertafter: EOF
+      with_items:
+        - http_proxy="http://172.20.40.71:8000"
+        - https_proxy="http://172.20.40.71:8000"
+        - ftp_proxy="http://172.20.40.71:8000"
+        - no_proxy="localhost,127.0.0.1"
+        - HTTP_PROXY="http://172.20.40.71:8000"
+        - HTTPS_PROXY="http://172.20.40.71:8000"
+        - FTP_PROXY="http://172.20.40.71:8000"
+        - NO_PROXY="localhost,127.0.0.1"
+
+    - name: Update /etc/apt/apt.conf file
+      lineinfile:
+        path: /etc/apt/apt.conf
+        line: "{{ item }}"
+        insertafter: EOF
+      with_items:
+        - Acquire::http::Proxy "http://172.20.40.71:8000";
+        - Acquire::https::Proxy "http://172.20.40.71:8000";
+        - Acquire::ftp::Proxy "http://172.20.40.71:8000";
+
+    - name: reload environment variables
+      shell: ". /etc/environment"

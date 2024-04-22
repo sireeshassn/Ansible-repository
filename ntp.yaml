@@ -2,9 +2,6 @@
 - name: Install NTP and Configure on ubuntu servers
   hosts: all
   become: yes
-  vars: 
-   ntp_server1: 3.8.88.249
-   ntp_server2: 3.8.17.184
 
   tasks:
    - name: remove chrony on NTP servers its recommended to remove chrony on NTP servers to avaiod issues
@@ -36,4 +33,3 @@
         name: ntp
         state: restarted
         enabled: yes
-
